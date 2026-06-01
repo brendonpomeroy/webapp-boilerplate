@@ -1,0 +1,133 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "ai-test api",
+    "version": "1.0.0",
+    "description": "Hono API for the ai-test monorepo."
+  },
+  "components": {
+    "schemas": {
+      "RootResponse": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "ai-test api"
+          },
+          "status": {
+            "type": "string",
+            "example": "ok"
+          }
+        },
+        "required": [
+          "name",
+          "status"
+        ]
+      },
+      "HealthResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "ok"
+          },
+          "uptime": {
+            "type": "number",
+            "example": 12.34
+          }
+        },
+        "required": [
+          "status",
+          "uptime"
+        ]
+      },
+      "HelloResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Hello, world!"
+          }
+        },
+        "required": [
+          "message"
+        ]
+      }
+    },
+    "parameters": {}
+  },
+  "paths": {
+    "/": {
+      "get": {
+        "tags": [
+          "meta"
+        ],
+        "summary": "Service info",
+        "responses": {
+          "200": {
+            "description": "Basic service info",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RootResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/health": {
+      "get": {
+        "tags": [
+          "meta"
+        ],
+        "summary": "Health check",
+        "responses": {
+          "200": {
+            "description": "Health status and process uptime",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/hello": {
+      "get": {
+        "tags": [
+          "greeting"
+        ],
+        "summary": "Greet by name",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "example": "Railway"
+            },
+            "required": false,
+            "name": "name",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A greeting message",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HelloResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "webhooks": {}
+}

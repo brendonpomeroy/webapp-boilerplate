@@ -28,6 +28,22 @@ In dev, Vite proxies `/api/*` to the API (see [apps/web/vite.config.ts](apps/web
 
 Run them individually with `pnpm dev:api` / `pnpm dev:web`.
 
+## API docs (OpenAPI)
+
+The API uses [`@hono/zod-openapi`](https://github.com/honojs/middleware/tree/main/packages/zod-openapi), so routes are defined with Zod schemas that drive both runtime validation and an OpenAPI 3.1 spec.
+
+- Live spec: `GET /doc`
+- Interactive docs (Swagger UI): `GET /ui`
+- Committed snapshot: [apps/api/openapi.json](apps/api/openapi.json)
+
+After **any** change to the API surface, regenerate the snapshot and commit it with your change:
+
+```bash
+pnpm --filter api spec:gen
+```
+
+See [CLAUDE.md](CLAUDE.md) for the full API-change checklist.
+
 ## Build
 
 ```bash
