@@ -1,24 +1,47 @@
 # ai-test
 
-A pnpm-workspace monorepo:
+A pnpm-workspace monorepo for prototyping features end to end:
 
 ```
 apps/
-  api/   Hono API (Node server)
-  web/   Vite + React app
-packages/   (empty — for shared code later)
+  api/   Hono API (Node server) — JWT-protected routes → services → Supabase
+  web/   Vite + React app — Supabase login, calls the API with the JWT
+packages/
+  shared/   zod schemas + types shared by both apps
 ```
+
+**Stack:** React + Vite → Hono (Node adapter) → Supabase (auth + Postgres).
+Supabase issues a JWT on login; the web app sends it with every request; Hono
+validates it in middleware, then routes to a service that owns the DB access.
 
 ## Prerequisites
 
 - Node >= 20
 - pnpm (`corepack enable` or `npm i -g pnpm`)
+- A Supabase project (the owner provides URL + keys) for auth/DB to work
+
+## Configuration
+
+Each app has a `.env.example`; copy it to `.env` and fill in real values
+(set by the project owner — never commit secrets):
+
+```bash
+cp apps/api/.env.example apps/api/.env
+cp apps/web/.env.example apps/web/.env
+```
+
+- **api**: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_JWT_SECRET`
+- **web**: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
+
+Apply the example feature's table once in your Supabase SQL editor:
+[apps/api/supabase/schema.sql](apps/api/supabase/schema.sql). The app boots
+without Supabase configured (public routes work), but auth/notes need it.
 
 ## Local development
 
 ```bash
 pnpm install
-pnpm dev          # runs API (:3001) and web (:5173) together
+pnpm dev          # builds shared, then runs API (:3001) and web (:5173) together
 ```
 
 - Web: http://localhost:5173
@@ -65,13 +88,24 @@ For each service:
    - Web service → `apps/web/railway.json`
 3. Railway installs the whole workspace and builds only that app via the pnpm `--filter` commands. `PORT` is injected automatically; both apps read it.
 
+Each build also builds `@ai-test/shared` first (the apps import its compiled
+output). The API runs as a long-running container with **app sleeping enabled**
+— it scales to zero when idle and wakes on the next request (a brief cold start,
+fine for a PoC). Supabase stays external.
+
 ### Service env vars
 
 **api**
+- `SUPABASE_URL` — your Supabase project URL.
+- `SUPABASE_SERVICE_ROLE_KEY` — service-role (secret) key used by the service layer. Server-side only.
+- `SUPABASE_JWT_SECRET` — project JWT secret; the auth middleware verifies access tokens with it.
 - `WEB_ORIGIN` — your web service's public URL (e.g. `https://web-production-xxxx.up.railway.app`) to lock down CORS. Optional; defaults to `*`.
 
 **web**
-- `VITE_API_URL` — your api service's public URL (e.g. `https://api-production-xxxx.up.railway.app`). This is baked in at **build time**, so after setting/changing it you must redeploy the web service.
+- `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` — Supabase project URL + public anon key.
+- `VITE_API_URL` — your api service's public URL (e.g. `https://api-production-xxxx.up.railway.app`).
+
+> `VITE_*` vars are baked in at **build time**, so after setting/changing any of them you must redeploy the web service.
 
 ### Notes
 
