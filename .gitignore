@@ -17,3 +17,7 @@ build/
 # misc
 *.tsbuildinfo
 coverage/
+
+.env
+apps/api/.env
+apps/web/.env

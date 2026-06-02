@@ -63,8 +63,14 @@ Structure:
 - `src/app.ts` — the Hono app (exported so the spec generator imports it without
   starting a server). Defines routes + request/response schemas.
 - `src/middleware/auth.ts` — `requireAuth`: validates the Supabase JWT
-  (`Authorization: Bearer`) against `SUPABASE_JWT_SECRET` (HS256) and puts the
-  user on the context (`c.get("user")`). Attach it to any data route.
+  (`Authorization: Bearer`) and puts the user on the context (`c.get("user")`).
+  Supabase signs access tokens with asymmetric keys (ECC/ES256 by default), so
+  the middleware verifies them against the project's JWKS — fetched and cached
+  by `src/lib/jwks.ts` from `<SUPABASE_URL>/auth/v1/.well-known/jwks.json`. It
+  still accepts legacy HS256 tokens against `SUPABASE_JWT_SECRET` when that
+  secret is set, to ease migration. Attach it to any data route.
+- `src/lib/jwks.ts` — fetches and caches Supabase's public signing keys (JWKS)
+  for the auth middleware; refreshes on a short TTL or on an unknown `kid`.
 - `src/services/*` — the **service layer**. A service owns a domain and is the
   only code that touches the DB (e.g. `NoteService`).
 - `src/lib/supabase.ts` — lazy service-role client used by services. The
